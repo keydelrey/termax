@@ -86,7 +86,8 @@ class SetupProvider extends ChangeNotifier {
       notifyListeners();
 
       // Extract
-      await NativeBridge.extractRootfs(tarPath: tarPath);
+      final filesDir = await NativeBridge.getFilesDir();
+      await NativeBridge.extractRootfs(tarPath: '$filesDir/tmp/rootfs.tar.gz');
 
       _state = _state.copyWith(
         step: SetupStep.idle,
