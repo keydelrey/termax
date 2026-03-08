@@ -147,21 +147,21 @@ jobs:
           ls -lh artifacts/
 
       - name: Upload APK artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: termax-apks
           path: artifacts/*.apk
           retention-days: 30
 
       - name: Upload AAB artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: termax-aab
           path: artifacts/*.aab
           retention-days: 30
 
       - name: Upload AAB artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: termax-aab
           path: artifacts/*.aab
