@@ -86,7 +86,7 @@ class SetupProvider extends ChangeNotifier {
       notifyListeners();
 
       // Extract
-      await NativeBridge.extractRootfs(tarPath: tarPath);
+      await NativeBridge.extractRootfs(tarPath);
 
       _state = _state.copyWith(
         step: SetupStep.idle,
