@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:xterm/xterm.dart';
 import 'package:flutter_pty/flutter_pty.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../services/native_bridge.dart';
-import '../services/screenshot_service.dart';
 import '../services/terminal_service.dart';
 import '../widgets/terminal_toolbar.dart';
 
@@ -25,7 +23,6 @@ class _TerminalScreenState extends State<TerminalScreen> {
   String? _error;
   final _ctrlNotifier = ValueNotifier<bool>(false);
   final _altNotifier = ValueNotifier<bool>(false);
-  final _screenshotKey = GlobalKey();
   static final _anyUrlRegex = RegExp(r'https?://[^\s<>\[\]"' "'" r'\)]+');
   /// Box-drawing and other TUI characters that break URLs when copied
   static final _boxDrawing = RegExp(r'[│┤├┬┴┼╮╯╰╭─╌╴╶┌┐└┘◇◆]+');
@@ -243,18 +240,6 @@ class _TerminalScreenState extends State<TerminalScreen> {
     if (data?.text != null && data!.text!.isNotEmpty) {
       _pty?.write(utf8.encode(data.text!));
     }
-  }
-
-  Future<void> _takeScreenshot() async {
-    final path = await ScreenshotService.capture(_screenshotKey);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(path != null
-            ? 'Screenshot saved: ${path.split('/').last}'
-            : 'Failed to capture screenshot'),
-      ),
-    );
   }
 
   /// Detect URLs in terminal at tap position. Joins adjacent lines
