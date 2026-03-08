@@ -3,18 +3,8 @@ name: Build Termax
 on:
   push:
     branches: ['*']
-    paths:
-      - 'flutter_app/**'
-      - 'scripts/fetch-proot-binaries.sh'
-      - 'scripts/build-apk.sh'
-      - '.github/workflows/flutter-build.yml'
   pull_request:
-    branches: [main]
-    paths:
-      - 'flutter_app/**'
-      - 'scripts/fetch-proot-binaries.sh'
-      - 'scripts/build-apk.sh'
-      - '.github/workflows/flutter-build.yml'
+    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -50,7 +40,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('flutter_app/android/**/*.gradle*', 'flutter_app/android/gradle-wrapper.properties') }}
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}-
 
       - name: Cache pub dependencies
@@ -58,8 +48,8 @@ jobs:
         with:
           path: |
             ~/.pub-cache
-            flutter_app/.dart_tool
-          key: pub-${{ runner.os }}-${{ hashFiles('flutter_app/pubspec.lock') }}
+            .dart_tool
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
           restore-keys: pub-${{ runner.os }}-
 
       - name: Setup signing
@@ -71,13 +61,13 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > "${{ github.workspace }}/release.jks"
-          cat > flutter_app/android/key.properties <<EOF
+          cat > android/key.properties <<EOF
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEY_PASSWORD
           keyAlias=$KEY_ALIAS
           storeFile=${{ github.workspace }}/release.jks
           EOF
-          sed -i 's/^[[:space:]]*//' flutter_app/android/key.properties
+          sed -i 's/^[[:space:]]*//' android/key.properties
 
       - name: Fetch PRoot binaries
         run: bash scripts/fetch-proot-binaries.sh
@@ -102,48 +92,43 @@ jobs:
           done
 
       - name: Get Flutter dependencies
-        working-directory: flutter_app
         run: flutter pub get
 
       - name: Analyze Dart code
-        working-directory: flutter_app
         run: flutter analyze --no-fatal-infos
         continue-on-error: true
 
       - name: Build fat APK (all ABIs)
-        working-directory: flutter_app
         run: flutter build apk --release
 
       - name: Build per-ABI APKs
-        working-directory: flutter_app
         run: flutter build apk --release --split-per-abi
 
       - name: Build AAB (App Bundle)
-        working-directory: flutter_app
         run: flutter build appbundle --release
 
       - name: Rename and collect artifacts
         id: apks
         run: |
-          VERSION=$(grep '^version:' flutter_app/pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
+          VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
           mkdir -p artifacts
 
           # Fat APK
-          cp flutter_app/build/app/outputs/flutter-apk/app-release.apk \
+          cp build/app/outputs/flutter-apk/app-release.apk \
              "artifacts/Termax-v${VERSION}-universal.apk"
 
           # Per-ABI APKs
           for abi in arm64-v8a armeabi-v7a x86_64; do
-            SRC="flutter_app/build/app/outputs/flutter-apk/app-${abi}-release.apk"
+            SRC="build/app/outputs/flutter-apk/app-${abi}-release.apk"
             if [ -f "$SRC" ]; then
               cp "$SRC" "artifacts/Termax-v${VERSION}-${abi}.apk"
             fi
           done
 
           # AAB
-          AAB="flutter_app/build/app/outputs/bundle/release/app-release.aab"
+          AAB="build/app/outputs/bundle/release/app-release.aab"
           if [ -f "$AAB" ]; then
             cp "$AAB" "artifacts/Termax-v${VERSION}.aab"
           fi
@@ -278,7 +263,7 @@ jobs:
       - name: Get version
         id: version
         run: |
-          VERSION=$(grep '^version:' flutter_app/pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
+          VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
           # Check if this tag already exists
@@ -320,3 +305,4 @@ jobs:
           files: artifacts/*
           draft: false
           prerelease: false
+
