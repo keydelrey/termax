@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:xterm/xterm.dart';
 import 'package:flutter_pty/flutter_pty.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/native_bridge.dart';
 import '../services/terminal_service.dart';
 import '../widgets/terminal_toolbar.dart';
@@ -322,11 +323,6 @@ class _TerminalScreenState extends State<TerminalScreen> {
         title: const Text('Terminal'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.camera_alt_outlined),
-            tooltip: 'Screenshot',
-            onPressed: _takeScreenshot,
-          ),
-          IconButton(
             icon: const Icon(Icons.copy),
             tooltip: 'Copy',
             onPressed: _copySelection,
@@ -412,19 +408,16 @@ class _TerminalScreenState extends State<TerminalScreen> {
     return Column(
       children: [
         Expanded(
-          child: RepaintBoundary(
-            key: _screenshotKey,
-            child: TerminalView(
-              _terminal,
-              controller: _controller,
-              textStyle: const TerminalStyle(
-                fontSize: 11,
-                height: 1.0,
-                fontFamily: 'DejaVuSansMono',
-                fontFamilyFallback: _fontFallback,
-              ),
-              onTapUp: _handleTap,
+          child: TerminalView(
+            _terminal,
+            controller: _controller,
+            textStyle: const TerminalStyle(
+              fontSize: 11,
+              height: 1.0,
+              fontFamily: 'DejaVuSansMono',
+              fontFamilyFallback: _fontFallback,
             ),
+            onTapUp: _handleTap,
           ),
         ),
         TerminalToolbar(
